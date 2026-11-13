@@ -22,7 +22,7 @@ Open **`index.html`** in a modern browser. No dependencies, authentication, buil
 
 ### Preview on mobile
 
-![LeadRescue mobile screenshot](preview_mobile.png)
+**Mobile preview:** the same `index.html` adapts to smaller screens. Preview screenshots are included in the [downloadable source package](https://github.com/l70aa/leadrescue-demo) from the project author.
 
 ## Architecture — demo versus production
 
@@ -41,7 +41,7 @@ Open **`index.html`** in a modern browser. No dependencies, authentication, buil
 - `index.html` — the complete interactive demo.
 - `n8n_webhook_starter.json` — optional n8n intake-validation-scoring workflow template.
 - `sample_leads.csv` — fictional sample leads for import.
-- `preview_desktop.png` / `preview_mobile.png` — screenshots.
+- Screenshots are available in the separate project ZIP archive shared with the author.
 
 ## Live demo with GitHub Pages
 
