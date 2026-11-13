@@ -1,0 +1,83 @@
+{
+  "name": "LeadRescue — Intake, Validation & Scoring Starter",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "leadrescue-intake",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "leadrescue-webhook",
+      "name": "Receive lead",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        240,
+        300
+      ],
+      "webhookId": "leadrescue-intake-001"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const items = $input.all();\nreturn items.map(({json}) => {\n  const body = json.body || json;\n  const name = String(body.name || '').trim().slice(0,100);\n  const service = String(body.service || '').trim().slice(0,100);\n  const email = String(body.email || '').toLowerCase().trim().slice(0,150);\n  const phone = String(body.phone || '').replace(/[^0-9]/g,'').slice(-15);\n  const message = String(body.message || '').slice(0,1000);\n  const channel = String(body.channel || 'website').slice(0,60);\n  const budget = Math.max(0,Math.min(10000000,Number(body.budget) || 0));\n  const consent = body.consent === true || body.consent === 'true';\n  const errors = [];\n  if (!name) errors.push('name is required');\n  if (!service) errors.push('service is required');\n  if (!email && phone.length < 9) errors.push('email or a valid phone is required');\n  let score = 0;\n  if (phone.length >= 9) score += 20;\n  if (service.length > 3) score += 15;\n  if (budget >= 500) score += 25;\n  if (/urgent|today|this week|عاجل|مستعجل|الأسبوع/i.test(message)) score += 30;\n  if (/website|form|ads|نموذج الموقع|إعلان ممول/.test(channel)) score += 10;\n  const priority = score >= 70 ? 'high' : score >= 45 ? 'medium' : 'normal';\n  const idempotencyKey = email ? 'email:' + email : 'phone:' + phone;\n  return {json:{ok:errors.length===0,errors,lead:{name,service,email,phone,message,channel,budget,consent},score,priority,idempotency_key:idempotencyKey,next_step:errors.length ? 'manual_review' : 'persist_and_assign_followup'}};\n});"
+      },
+      "id": "leadrescue-score",
+      "name": "Validate and score (no AI)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        470,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "leadrescue-respond",
+      "name": "Return assessment",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        700,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Receive lead": {
+      "main": [
+        [
+          {
+            "node": "Validate and score (no AI)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate and score (no AI)": {
+      "main": [
+        [
+          {
+            "node": "Return assessment",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Asia/Baghdad"
+  },
+  "active": false
+}
